@@ -1,7 +1,9 @@
 const express = require('express');
 const mongodb = require('mongodb');
+const path = require('path');
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
 const MongoClient = mongodb.MongoClient;
@@ -17,6 +19,11 @@ MongoClient.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true 
     app.get('/', async (req, res) => {
       const data = await db.collection('products').find().toArray(); // Change collection name
       res.render('index', { data });
+    });
+
+    // singup routes
+    app.get('/signup', (req, res) => {
+        res.render('signup');
     });
 
     // Start the server
