@@ -3,13 +3,18 @@ const mongodb = require("mongodb");
 const path = require("path");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
-const fs = require("fs");
+const session = require('express-session');
 
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(session({
+  secret: 'Akash3975',
+  resave: false,
+  saveUninitialized: true
+}));
 
 // Connect to MongoDB
 const MongoClient = mongodb.MongoClient;
@@ -60,8 +65,12 @@ MongoClient.connect(mongoURL, {
 
         const userdata = await collection.insertOne(data);
         console.log(userdata);
+        res.redirect('/login');
       }
     });
+
+
+
 
     // login routes
     app.get("/login", (req, res) => {
@@ -70,6 +79,7 @@ MongoClient.connect(mongoURL, {
 
     app.post("/login", async (req, res) => {
       const collection = db.collection("users");
+      const userName = db.collection.findOne(firstName)
       try {
         const check = await collection.findOne({ email: req.body.email });
         if (!check) {
@@ -84,10 +94,9 @@ MongoClient.connect(mongoURL, {
           check.password
         );
         if (isPasswordMatch) {
-          let a = fs.readFileSync("index.ejs");
-          res.send(a.toString());
-          res.send("login Successfully");
-          res.status(201);
+          res.status(201).json({ message: "login successfull" })
+          res.redirect('/');
+
         } else {
           res.send("wrong password");
           res.status(501);
@@ -98,6 +107,34 @@ MongoClient.connect(mongoURL, {
       }
     });
 
+    app.get('/cart', (req, res) => {
+      // Retrieve cart items from session
+      const cartItems = req.session.cart || [];
+      res.render('cart', { cartItems });
+    });
+
+    app.post('/add-to-cart', (req, res) => {
+      const productId = req.body.productId;
+      // Assume user's cart is stored in the session
+      if (!req.session.cart) {
+        req.session.cart = [];
+      }
+      req.session.cart.push(productId);
+      res.redirect('/');
+    });
+
+
+    app.post('/delete-from-cart', (req, res) => {
+      const productId = req.body.productId;
+      // Ensure req.session.cart is initialized as an array
+      req.session.cart = req.session.cart || [];
+      // Remove product from cart
+      req.session.cart = req.session.cart.filter(id => id !== productId);
+      res.redirect('/cart')
+    });
+
+
+
     // Start the server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
@@ -107,6 +144,9 @@ MongoClient.connect(mongoURL, {
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
+
+
+
 
 // Set EJS as view engine
 app.set("view engine", "ejs");

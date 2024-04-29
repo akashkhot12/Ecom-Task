@@ -1,0 +1,25 @@
+<!-- cart.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <h1>Cart</h1>
+  <ul>
+    <% cartItems.forEach(item => { %>
+      <li>
+        <strong>Product ID: <%= item %></strong>
+        <!-- Display other product details as needed -->
+        <form action="/delete-from-cart" method="POST">
+          <input type="hidden" name="productId" value="<%= item %>">
+          <button type="submit">Delete</button>
+        </form>
+      </li>
+    <% }) %>
+  </ul>
+</body>
+</html>
